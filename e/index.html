@@ -1,0 +1,26 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evento · Che Succede Belluno</title>
+<meta property="og:title" content="Un evento su Che Succede Belluno">
+<meta property="og:description" content="Apri il link per vedere i dettagli e partecipare.">
+<link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
+<header><div class="logo">▲</div><b>Che Succede Belluno</b></header>
+<div class="card">
+<h1 id="t">Evento</h1>
+<p class="meta" id="d"></p>
+<p class="meta" id="p"></p>
+<a class="btn primary" id="open" href="#">Apri nell'app</a>
+<a class="btn ghost" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Non hai l'app? Scaricala</a>
+<p class="small" style="margin-top:16px">Su Che Succede Belluno trovi gli eventi di sport, sagre, musica e cultura della provincia e puoi segnare che partecipi.</p>
+</div></div>
+<script>
+const q=new URLSearchParams(location.search);
+const set=(id,v,pre)=>{const el=document.getElementById(id); if(v){el.textContent=(pre||'')+v}else{el.remove()}};
+const t=q.get('t'); if(t){document.getElementById('t').textContent=t; document.title=t+' · Che Succede Belluno';}
+set('d',q.get('d'),'📅 '); set('p',q.get('p'),'📍 ');
+const id=q.get('id')||'';
+const store='https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app';
+const target='bortovalabs.github.io/e/?id='+encodeURIComponent(id);
+document.getElementById('open').href=/Android/i.test(navigator.userAgent)
+  ? 'intent://'+target+'#Intent;scheme=https;package=it.chesuccedebelluno.app;S.browser_fallback_url='+encodeURIComponent(store)+';end'
+  : store;
+</script></body></html>
