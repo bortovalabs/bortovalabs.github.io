@@ -1,0 +1,80 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Castagnata · Che Succede Belluno</title>
+<meta property="og:title" content="Castagnata">
+<meta property="og:description" content="Venerdì 27 novembre · 09:00 – domenica 29 novembre 23:59 · Area Verde, Borgo Valbelluna · Pro Loco Borgo">
+<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/e/img/ruLo0MYUxBZU75d8ly5U.jpg"><link rel="stylesheet" href="/style.css">
+<style>
+.photo{width:100%;max-height:260px;object-fit:cover;border-radius:14px;margin-bottom:14px;display:block}
+.group{font-weight:700;margin:2px 0 10px}
+.desc{white-space:pre-line;margin:14px 0 4px}
+.badge{display:inline-block;background:#fbe3e3;color:#8a1c1c;border-radius:20px;padding:2px 10px;font-weight:700;font-size:13px;margin-bottom:8px}
+</style></head><body><div class="wrap">
+<header><img src="/icon.svg" alt=""><b>CHE SUCCEDE <span>BELLUNO</span></b></header>
+<div class="card">
+<div id="ev"><img class="photo" src="/e/img/ruLo0MYUxBZU75d8ly5U.jpg" alt=""><h1>Castagnata</h1><p class="group">Pro Loco Borgo</p><p class="meta">📅 Venerdì 27 novembre · 09:00 – domenica 29 novembre 23:59</p><p class="meta">📍 Area Verde, Borgo Valbelluna</p></div>
+<a class="btn primary" id="open" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Apri nell'app</a>
+<a class="btn ghost" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Non hai l'app? Scaricala</a>
+<p class="small" style="margin-top:16px">Su Che Succede Belluno trovi gli eventi di sport, sagre, musica e cultura della provincia e puoi salvare quelli che ti interessano.</p>
+</div></div>
+<script>
+// L'evento si legge dal database partendo dal suo codice: titolo, data e luogo scritti nel link
+// (versioni precedenti dell'app) non si usano, così nessuno può far comparire testi inventati.
+(function () {
+  var path = location.pathname.replace(/\/+$/, '').split('/');
+  var id = new URLSearchParams(location.search).get('id') || (path.length >= 3 && path[1] === 'e' ? path[2] : '');
+  id = (id || '').replace(/\.html$/, '');
+  var store = 'https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app';
+  if (id && /Android/i.test(navigator.userAgent)) {
+    var target = 'bortovalabs.github.io/e/?id=' + encodeURIComponent(id);
+    document.getElementById('open').href = 'intent://' + target +
+      '#Intent;scheme=https;package=it.chesuccedebelluno.app;S.browser_fallback_url=' + encodeURIComponent(store) + ';end';
+  }
+  var box = document.getElementById('ev');
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  function show(nodes) { box.innerHTML = ''; nodes.forEach(function (n) { if (n) box.appendChild(n); }); }
+  function notFound(msg) { show([el('h1', '', 'Evento non trovato'), el('p', 'meta', msg)]); document.title = 'Che Succede Belluno'; }
+  if (!id || !/^[A-Za-z0-9_-]{1,64}$/.test(id)) { notFound('Il link non è completo. Apri l\'app per vedere gli eventi in provincia.'); return; }
+
+  var tz = 'Europe/Rome';
+  function day(d) { return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz }); }
+  function hour(d) { return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: tz }); }
+  function when(s, e) {
+    var txt = day(s) + ' · ' + hour(s);
+    if (e) txt += (day(e) === day(s) ? '–' + hour(e) : ' – ' + day(e) + ' ' + hour(e));
+    return txt.charAt(0).toUpperCase() + txt.slice(1);
+  }
+  var url = 'https://firestore.googleapis.com/v1/projects/che-succede-belluno/databases/(default)/documents/events/' + encodeURIComponent(id);
+  fetch(url).then(function (r) {
+    if (r.status === 404) throw 'missing';
+    if (!r.ok) throw 'error';
+    return r.json();
+  }).then(function (doc) {
+    var f = doc.fields || {};
+    var s = function (k) { return f[k] && f[k].stringValue ? f[k].stringValue : ''; };
+    var b = function (k) { return !!(f[k] && f[k].booleanValue); };
+    var t = function (k) { return f[k] && f[k].timestampValue ? new Date(f[k].timestampValue) : null; };
+    if (b('hidden')) { notFound('Questo evento non è pubblico.'); return; }
+    var title = s('title') || 'Evento';
+    document.title = title + ' · Che Succede Belluno';
+    var start = t('start'), end = t('end');
+    var place = [s('place'), s('town')].filter(Boolean).join(', ');
+    var thumb = s('thumb') || s('image');
+    var img = null;
+    if (thumb) { img = el('img', 'photo'); img.alt = ''; img.src = 'data:image/jpeg;base64,' + thumb; }
+    var desc = s('description');
+    if (desc.length > 400) desc = desc.slice(0, 400).replace(/\s+\S*$/, '') + '…';
+    show([
+      img,
+      b('cancelled') ? el('span', 'badge', 'Annullato') : null,
+      el('h1', '', title),
+      s('groupName') ? el('p', 'group', s('groupName')) : null,
+      start ? el('p', 'meta', '📅 ' + when(start, end)) : null,
+      place ? el('p', 'meta', '📍 ' + place) : null,
+      desc ? el('p', 'desc', desc) : null
+    ]);
+  }).catch(function (e) {
+    if (e === 'missing') notFound('Forse è stato eliminato dall\'organizzatore. Apri l\'app per vedere gli altri eventi.');
+    else show([el('h1', '', 'Evento'), el('p', 'meta', 'Non riesco a caricare i dettagli adesso. Apri l\'app per vederlo.')]);
+  });
+})();
+</script></body></html>
