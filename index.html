@@ -1,13 +1,97 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Che Succede Belluno</title>
+<title>Che Succede Belluno · eventi in provincia di Belluno</title>
+<meta name="description" content="Sport, sagre, musica e cultura in provincia di Belluno: tutti gli eventi di associazioni, Pro Loco e gruppi del territorio, in un posto solo.">
 <meta property="og:title" content="Che Succede Belluno">
-<meta property="og:description" content="Sport, sagre, musica e cultura in provincia di Belluno, in un'unica app.">
-<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
-<header><img src="/icon.svg" alt=""><b>CHE SUCCEDE <span>BELLUNO</span></b></header>
-<div class="card">
-<h1>Tutto quello che succede in provincia, in un posto solo</h1>
-<p class="meta">Eventi sportivi, sagre, serate e cultura a Belluno e provincia. Segui gruppi e associazioni, salva gli eventi, condividili con gli amici.</p>
-<a class="btn primary" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Scarica l'app per Android</a>
+<meta property="og:description" content="Sport, sagre, musica e cultura in provincia di Belluno, in un posto solo.">
+<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"></head><body><div class="wrap mid">
+<div class="top">
+  <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>CHE SUCCEDE <span>BELLUNO</span></b></header></a>
+  <nav><a class="on" href="/">Eventi</a><a href="/gruppi/">Associazioni</a><a class="app" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">App Android</a></nav>
 </div>
-<p class="small" style="margin-top:20px"><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a> · <a href="/elimina-account.html">Cancellazione account</a><br>Contatti: <a href="mailto:bortovalabs@gmail.com">bortovalabs@gmail.com</a> · Nicola Bortoluzzi (Bortova Labs)</p>
-</div></body></html>
+
+<section class="hero">
+  <h1>Cosa succede in provincia di Belluno</h1>
+  <p>Sport, sagre, musica e cultura: gli eventi di associazioni, Pro Loco e gruppi del territorio, in un posto solo.</p>
+  <p class="note">Da qui puoi guardare tutto, anche da PC, tablet e iPhone. Per salvare gli eventi e seguire i gruppi c'è <a href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">l'app per Android</a>.</p>
+</section>
+
+<div class="tools">
+  <input class="search" id="q" type="search" placeholder="Cerca eventi, gruppi o comuni" aria-label="Cerca eventi, gruppi o comuni">
+</div>
+<div class="tools chips" role="group" aria-label="Filtri">
+  <button class="chip on" data-time="">Tutti</button>
+  <button class="chip" data-time="today">Oggi</button>
+  <button class="chip" data-time="weekend">Weekend</button>
+  <button class="chip" data-time="week">7 giorni</button>
+  <button class="chip" id="free" aria-pressed="false">€ Gratis</button>
+  <select class="chip" id="cat" aria-label="Sezione"><option value="">Tutte le sezioni</option></select>
+  <select class="chip" id="town" aria-label="Comune"><option value="">Tutti i comuni</option></select>
+</div>
+<p class="count" id="count"></p>
+<div id="list"><p class="loading">Carico gli eventi…</p></div>
+
+<footer class="foot small"><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a> · <a href="/elimina-account.html">Cancellazione account</a><br>Contatti: <a href="mailto:bortovalabs@gmail.com">bortovalabs@gmail.com</a> · Nicola Bortoluzzi (Bortova Labs)</footer>
+</div>
+<script src="/js/csb.js"></script>
+<script>
+(function () {
+  var all = [];
+  var f = { q: '', time: '', free: false, cat: '', town: '' };
+  // I filtri restano nell'indirizzo, così una ricerca si può condividere (es. /?time=weekend)
+  var params = new URLSearchParams(location.search);
+  ['q', 'time', 'cat', 'town'].forEach(function (k) { if (params.get(k)) f[k] = params.get(k); });
+  f.free = params.get('free') === '1';
+
+  var list = document.getElementById('list');
+  var q = document.getElementById('q');
+  var cat = document.getElementById('cat');
+  var town = document.getElementById('town');
+  var free = document.getElementById('free');
+  var chips = document.querySelectorAll('[data-time]');
+  Object.keys(CSB.CATS).forEach(function (id) {
+    var o = document.createElement('option'); o.value = id; o.textContent = CSB.CATS[id].name; cat.appendChild(o);
+  });
+  q.value = f.q;
+
+  function sync() {
+    cat.value = f.cat; free.classList.toggle('on', f.free); free.setAttribute('aria-pressed', f.free);
+    chips.forEach(function (c) { c.classList.toggle('on', c.dataset.time === f.time); c.setAttribute('aria-pressed', c.dataset.time === f.time); });
+    var p = new URLSearchParams();
+    ['q', 'time', 'cat', 'town'].forEach(function (k) { if (f[k]) p.set(k, f[k]); });
+    if (f.free) p.set('free', '1');
+    history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : ''));
+  }
+  function draw() {
+    f.q = q.value.trim(); // il testo scritto vale subito, anche se si tocca un filtro mentre si scrive
+    sync();
+    var shown = CSB.filter(all, f);
+    document.getElementById('count').textContent = all.length
+      ? (shown.length === 1 ? '1 evento' : shown.length + ' eventi') : '';
+    var any = f.q || f.time || f.free || f.cat || f.town;
+    CSB.renderEvents(list, shown, any
+      ? 'Nessun evento con questi filtri. Prova a toglierne qualcuno.'
+      : 'Per ora non ci sono eventi in programma. Torna a trovarci!');
+  }
+  var timer;
+  q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { f.q = q.value.trim(); draw(); }, 200); });
+  chips.forEach(function (c) { c.addEventListener('click', function () { f.time = c.dataset.time; draw(); }); });
+  free.addEventListener('click', function () { f.free = !f.free; draw(); });
+  cat.addEventListener('change', function () { f.cat = cat.value; draw(); });
+  town.addEventListener('change', function () { f.town = town.value; draw(); });
+
+  CSB.upcomingEvents().then(function (events) {
+    all = events;
+    var towns = {};
+    events.forEach(function (e) { if (e.town) towns[e.town] = true; });
+    Object.keys(towns).sort(function (a, b) { return a.localeCompare(b, 'it'); }).forEach(function (t) {
+      var o = document.createElement('option'); o.value = t; o.textContent = t; town.appendChild(o);
+    });
+    if (f.town && !towns[f.town]) f.town = '';
+    town.value = f.town;
+    draw();
+  }).catch(function () {
+    list.innerHTML = '';
+    list.appendChild(CSB.el('p', 'empty', 'Non riesco a caricare gli eventi in questo momento. Riprova tra poco.'));
+  });
+})();
+</script></body></html>

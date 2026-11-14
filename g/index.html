@@ -1,0 +1,73 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gruppo · Che Succede Belluno</title>
+<meta property="og:title" content="Un gruppo su Che Succede Belluno">
+<meta property="og:description" content="Gli eventi di associazioni e gruppi della provincia di Belluno.">
+<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css">
+<style>.gdesc{white-space:pre-line;margin:14px 0 0}</style></head><body><div class="wrap mid">
+<div class="top">
+  <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>CHE SUCCEDE <span>BELLUNO</span></b></header></a>
+  <nav><a href="/">Eventi</a><a href="/gruppi/">Associazioni</a><a class="app" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">App Android</a></nav>
+</div>
+<div class="card" id="g"><p class="loading">Carico il gruppo…</p></div>
+<div id="events"></div>
+<footer class="foot small"><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a><br>Contatti: <a href="mailto:bortovalabs@gmail.com">bortovalabs@gmail.com</a></footer>
+</div>
+<script src="/js/csb.js"></script>
+<script>
+(function () {
+  var el = CSB.el;
+  var box = document.getElementById('g');
+  var path = location.pathname.replace(/\/+$/, '').split('/');
+  var id = new URLSearchParams(location.search).get('id') || (path.length >= 3 && path[1] === 'g' ? path[2] : '');
+  function notFound(msg) {
+    box.innerHTML = '';
+    box.appendChild(el('h1', '', 'Gruppo non trovato'));
+    box.appendChild(el('p', 'meta', msg));
+    var a = el('a', 'btn primary', 'Vedi tutte le associazioni'); a.href = '/gruppi/'; box.appendChild(a);
+  }
+  if (!id || !/^[A-Za-z0-9_-]{1,64}$/.test(id)) { notFound('Il link non è completo.'); return; }
+
+  CSB.getDoc('groups/' + encodeURIComponent(id)).then(function (g) {
+    if (!g || g.hidden || !g.name) { notFound('Forse non è più pubblico.'); return; }
+    document.title = g.name + ' · Che Succede Belluno';
+    box.innerHTML = '';
+    var head = el('div', 'ghead');
+    head.appendChild(CSB.avatar(g, 76));
+    var t = el('div');
+    var h = el('h1', '', g.name);
+    if (g.verified) h.appendChild(CSB.verifiedBadge());
+    t.appendChild(h);
+    var cats = [g.category].concat((g.categories || []).filter(function (c) { return c !== g.category; }));
+    var line = [cats.length > 1 ? cats.map(function (c) { return CSB.cat(c).name; }).join(', ') : CSB.cat(g.category).name, g.type, g.town];
+    t.appendChild(el('p', 'meta', line.filter(Boolean).join(' · ')));
+    var n = g.followerCount || 0;
+    if (n > 0) t.appendChild(el('p', 'meta', n === 1 ? '1 persona lo segue' : n + ' persone lo seguono'));
+    head.appendChild(t);
+    box.appendChild(head);
+    if (g.description) box.appendChild(el('p', 'gdesc', g.description));
+    var links = el('div', 'links');
+    [['Instagram', CSB.safeUrl(g.instagram, 'instagram')], ['Facebook', CSB.safeUrl(g.facebook, 'facebook')],
+     ['Sito web', CSB.safeUrl(g.website || g.contact)]].forEach(function (l) {
+      if (!l[1]) return;
+      var a = el('a', '', l[0]); a.href = l[1]; a.target = '_blank'; a.rel = 'noopener nofollow ugc'; links.appendChild(a);
+    });
+    if (links.children.length) box.appendChild(links);
+    var follow = el('a', 'btn ghost', 'Seguilo nell\'app per Android');
+    follow.href = CSB.STORE;
+    box.appendChild(follow);
+
+    var ev = document.getElementById('events');
+    ev.appendChild(el('h2', '', 'Prossimi eventi'));
+    var list = el('div');
+    list.appendChild(el('p', 'loading', 'Carico gli eventi…'));
+    ev.appendChild(list);
+    CSB.groupEvents(id).then(function (events) {
+      CSB.renderEvents(list, events, 'Per ora nessun evento in programma.');
+    }).catch(function () {
+      list.innerHTML = ''; list.appendChild(el('p', 'empty', 'Non riesco a caricare gli eventi adesso.'));
+    });
+  }).catch(function () {
+    box.innerHTML = ''; box.appendChild(el('p', 'empty', 'Non riesco a caricare il gruppo in questo momento. Riprova tra poco.'));
+  });
+})();
+</script></body></html>

@@ -1,0 +1,73 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Associazioni e gruppi · Che Succede Belluno</title>
+<meta name="description" content="Associazioni, Pro Loco, società sportive e gruppi della provincia di Belluno che pubblicano i loro eventi su Che Succede Belluno.">
+<meta property="og:title" content="Associazioni e gruppi · Che Succede Belluno">
+<meta property="og:description" content="Associazioni, Pro Loco e gruppi della provincia di Belluno.">
+<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"></head><body><div class="wrap wide">
+<div class="top">
+  <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>CHE SUCCEDE <span>BELLUNO</span></b></header></a>
+  <nav><a href="/">Eventi</a><a class="on" href="/gruppi/">Associazioni</a><a class="app" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">App Android</a></nav>
+</div>
+
+<h1>Associazioni e gruppi</h1>
+<p class="meta">Chi organizza gli eventi in provincia. Hai un gruppo o un'associazione? Proponilo dall'app: dopo l'approvazione pubblichi i tuoi eventi in pochi secondi.</p>
+
+<div class="tools" style="margin-top:16px">
+  <input class="search" id="q" type="search" placeholder="Cerca per nome, tipo o comune" aria-label="Cerca per nome, tipo o comune">
+  <select class="chip" id="cat" aria-label="Sezione"><option value="">Tutte le sezioni</option></select>
+</div>
+<p class="count" id="count"></p>
+<div class="grid" id="list" style="margin-top:12px"><p class="loading">Carico i gruppi…</p></div>
+
+<footer class="foot small"><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a><br>Contatti: <a href="mailto:bortovalabs@gmail.com">bortovalabs@gmail.com</a></footer>
+</div>
+<script src="/js/csb.js"></script>
+<script>
+(function () {
+  var el = CSB.el;
+  var list = document.getElementById('list');
+  var q = document.getElementById('q');
+  var cat = document.getElementById('cat');
+  var all = [], upcoming = {};
+  Object.keys(CSB.CATS).forEach(function (id) {
+    var o = document.createElement('option'); o.value = id; o.textContent = CSB.CATS[id].name; cat.appendChild(o);
+  });
+  function plain(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function draw() {
+    var words = plain(q.value).split(/\s+/).filter(Boolean);
+    var shown = all.filter(function (g) {
+      var cats = [g.category].concat(g.categories || []);
+      if (cat.value && cats.indexOf(cat.value) < 0) return false;
+      var text = plain([g.name, g.type, g.town, CSB.cat(g.category).name].join(' '));
+      return words.every(function (w) { return text.indexOf(w) >= 0; });
+    });
+    document.getElementById('count').textContent = shown.length === 1 ? '1 gruppo' : shown.length + ' gruppi';
+    list.innerHTML = '';
+    if (!shown.length) { list.appendChild(el('p', 'empty', 'Nessun gruppo trovato.')); return; }
+    shown.forEach(function (g) {
+      var a = el('a', 'grp');
+      a.href = '/g/?id=' + encodeURIComponent(g.id);
+      a.appendChild(CSB.avatar(g, 52));
+      var t = el('div', 't');
+      var b = el('b', '', g.name);
+      if (g.verified) b.appendChild(CSB.verifiedBadge());
+      t.appendChild(b);
+      t.appendChild(el('small', '', [g.type, g.town].filter(Boolean).join(' · ')));
+      var n = upcoming[g.id] || 0;
+      t.appendChild(el('small', '', n ? (n === 1 ? '1 evento in arrivo' : n + ' eventi in arrivo') : 'Nessun evento in arrivo'));
+      a.appendChild(t);
+      list.appendChild(a);
+    });
+  }
+  q.addEventListener('input', draw);
+  cat.addEventListener('change', draw);
+  Promise.all([CSB.groups(), CSB.upcomingEvents().catch(function () { return []; })]).then(function (r) {
+    all = r[0];
+    r[1].forEach(function (e) { if (e.groupId) upcoming[e.groupId] = (upcoming[e.groupId] || 0) + 1; });
+    draw();
+  }).catch(function () {
+    list.innerHTML = '';
+    list.appendChild(el('p', 'empty', 'Non riesco a caricare i gruppi in questo momento. Riprova tra poco.'));
+  });
+})();
+</script></body></html>

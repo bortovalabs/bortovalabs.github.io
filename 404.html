@@ -7,11 +7,13 @@
 (function () {
   var m = location.pathname.match(/^\/e\/([A-Za-z0-9_-]{1,64})(?:\.html)?\/?$/);
   if (m) location.replace('/e/?id=' + m[1]);
+  var g = location.pathname.match(/^\/g\/([A-Za-z0-9_-]{1,64})\/?$/);
+  if (g) location.replace('/g/?id=' + g[1]);
 })();
 </script></head><body><div class="wrap">
 <header><img src="/icon.svg" alt=""><b>CHE SUCCEDE <span>BELLUNO</span></b></header>
 <div class="card">
 <h1>Pagina non trovata</h1>
 <p class="meta">Il link potrebbe essere incompleto.</p>
-<a class="btn primary" href="/">Vai alla pagina principale</a>
+<a class="btn primary" href="/">Vedi gli eventi in provincia</a>
 </div></div></body></html>
