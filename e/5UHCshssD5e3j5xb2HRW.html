@@ -1,5 +1,5 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sagra Polenta e Funghi · Che Succede Belluno</title>
+<title>Sagra Polenta e Funghi · Vivi Belluno</title>
 <meta property="og:title" content="Sagra Polenta e Funghi">
 <meta property="og:description" content="Sabato 14 novembre · 11:00 – domenica 15 novembre 23:59 · Piazza Grande, Borgo Valbelluna · Pro Loco Borgo">
 <link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/e/img/5UHCshssD5e3j5xb2HRW.jpg"><link rel="stylesheet" href="/style.css">
@@ -13,7 +13,7 @@
 .badge{display:inline-block;background:#fbe3e3;color:#8a1c1c;border-radius:20px;padding:2px 10px;font-weight:700;font-size:13px;margin-bottom:8px}
 </style></head><body><div class="wrap">
 <div class="top">
-  <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>CHE SUCCEDE <span>BELLUNO</span></b></header></a>
+  <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>VIVI <span>BELLUNO</span></b></header></a>
   <nav><a href="/">Eventi</a><a href="/gruppi/">Associazioni</a></nav>
 </div>
 <div class="card">
@@ -21,7 +21,7 @@
 <div class="btnrow" id="actions"></div>
 <a class="btn primary" id="open" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Apri nell'app</a>
 <a class="btn ghost" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Non hai l'app? Scaricala per Android</a>
-<p class="small" style="margin-top:16px">Su Che Succede Belluno trovi gli eventi di sport, sagre, musica e cultura della provincia. <a href="/">Vedi tutti gli eventi</a></p>
+<p class="small" style="margin-top:16px">Su Vivi Belluno trovi gli eventi di sport, sagre, musica e cultura della provincia. <a href="/">Vedi tutti gli eventi</a></p>
 </div></div>
 <script src="/js/csb.js"></script>
 <script>
@@ -44,7 +44,7 @@
   var box = document.getElementById('ev');
   var actions = document.getElementById('actions');
   function show(nodes) { box.innerHTML = ''; nodes.forEach(function (n) { if (n) box.appendChild(n); }); }
-  function notFound(msg) { show([el('h1', '', 'Evento non trovato'), el('p', 'meta', msg)]); document.title = 'Che Succede Belluno'; }
+  function notFound(msg) { show([el('h1', '', 'Evento non trovato'), el('p', 'meta', msg)]); document.title = 'Vivi Belluno'; }
   if (!id || !/^[A-Za-z0-9_-]{1,64}$/.test(id)) { notFound('Il link non è completo. Guarda gli eventi in provincia dalla pagina principale.'); return; }
 
   function button(text, href, cls, download) {
@@ -57,7 +57,7 @@
   function ics(e) {
     function stamp(d) { return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
     function esc(s) { return (s || '').replace(/\\/g, '\\\\').replace(/[,;]/g, '\\$&').replace(/\r?\n/g, '\\n'); }
-    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Che Succede Belluno//IT', 'BEGIN:VEVENT',
+    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Vivi Belluno//IT', 'BEGIN:VEVENT',
       'UID:' + id + '@chesuccedebelluno', 'DTSTAMP:' + stamp(new Date()),
       'DTSTART:' + stamp(e.start), 'DTEND:' + stamp(CSB.endTime(e)),
       'SUMMARY:' + esc(e.title), 'LOCATION:' + esc([e.place, e.town].filter(Boolean).join(', ')),
@@ -70,7 +70,7 @@
     if (!e) { notFound('Forse è stato eliminato dall\'organizzatore. Guarda gli altri eventi dalla pagina principale.'); return; }
     if (e.hidden) { notFound('Questo evento non è pubblico.'); return; }
     var title = e.title || 'Evento';
-    document.title = title + ' · Che Succede Belluno';
+    document.title = title + ' · Vivi Belluno';
     var start = e.start instanceof Date ? e.start : null;
     var pic;
     var thumb = e.thumb || e.image;
