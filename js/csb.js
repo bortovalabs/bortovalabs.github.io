@@ -1,4 +1,4 @@
-// Che Succede Belluno – funzioni comuni del sito (solo lettura dei dati pubblici).
+// Vivi Belluno – funzioni comuni del sito (solo lettura dei dati pubblici).
 // Eventi e gruppi si leggono dal database con l'API REST pubblica di Firestore, senza account:
 // sono gli stessi dati che chiunque vede nell'app senza entrare. Nessun cookie, nessun dato personale.
 (function () {

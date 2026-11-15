@@ -92,8 +92,8 @@ def pagina(modello, eid, f):
         f'<p class="meta">📍 {esc(luogo)}</p>' if luogo else '',
     ])
     p = modello
-    p = p.replace('<title>Evento · Che Succede Belluno</title>', f'<title>{esc(titolo)} · Che Succede Belluno</title>')
-    p = p.replace('content="Un evento su Che Succede Belluno"', f'content="{esc(titolo)}"')
+    p = p.replace('<title>Evento · Vivi Belluno</title>', f'<title>{esc(titolo)} · Vivi Belluno</title>')
+    p = p.replace('content="Un evento su Vivi Belluno"', f'content="{esc(titolo)}"')
     p = p.replace('content="Sport, sagre, musica e cultura in provincia di Belluno."', f'content="{esc(descrizione)}"')
     p = p.replace('content="https://bortovalabs.github.io/og.png"', f'content="{foto}"')
     p = re.sub(r'<!--EVENTO-->.*<!--/EVENTO-->', lambda _: f'<div id="ev">{corpo}</div>', p, flags=re.S)
