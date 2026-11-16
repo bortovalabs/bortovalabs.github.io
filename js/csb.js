@@ -46,10 +46,12 @@
       return r.json().then(docOf);
     });
   }
+  /// Chi organizza: il gruppo, oppure (eventi della redazione, senza gruppo) il nome scritto a mano.
+  function organizer(e) { return e.groupId ? (e.groupName || '') : (e.organizerText || e.groupName || ''); }
   function select(names) { return { fields: names.map(function (n) { return { fieldPath: n }; }) }; }
 
   var EVENT_FIELDS = ['title', 'category', 'type', 'start', 'end', 'durationMinutes', 'place', 'town', 'price',
-    'groupId', 'groupName', 'cancelled', 'hidden', 'signupUrl', 'maxParticipants', 'description'];
+    'groupId', 'groupName', 'organizerText', 'cancelled', 'hidden', 'signupUrl', 'maxParticipants', 'description'];
 
   function eventsWhere(field, op, value) {
     return query({
@@ -204,7 +206,7 @@
       if (f.town && e.town !== f.town) return false;
       if (f.free && e.price !== 0) return false;
       if (words.length) {
-        var text = plain([e.title, e.place, e.town, e.type, e.groupName, cat(e.category).name, e.description].join(' '));
+        var text = plain([e.title, e.place, e.town, e.type, organizer(e), cat(e.category).name, e.description].join(' '));
         if (!words.every(function (w) { return text.indexOf(w) >= 0; })) return false;
       }
       if (f.time === 'today') return covers(e, today, addDays(today, 1));
@@ -254,7 +256,7 @@
     body.appendChild(el('h3', '', e.title || 'Evento'));
     var place = [e.place, e.town].filter(Boolean).join(', ');
     if (place) body.appendChild(el('p', 'where', place));
-    if (e.groupName) body.appendChild(el('p', 'who', e.groupName));
+    if (organizer(e)) body.appendChild(el('p', 'who', organizer(e)));
     var tags = el('div', 'tags');
     var pr = priceLabel(e.price);
     if (pr) tags.appendChild(el('span', 'tag' + (pr === 'Gratis' ? ' free' : ''), pr));
@@ -317,7 +319,7 @@
   window.CSB = {
     STORE: STORE, upcomingEvents: upcomingEvents, groupEvents: groupEvents, groups: groups, getDoc: getDoc,
     cat: cat, CATS: CATS, emoji: emoji, filter: filter, renderEvents: renderEvents, eventCard: eventCard,
-    whenLong: whenLong, priceLabel: priceLabel, endTime: endTime, el: el, safeUrl: safeUrl, avatar: avatar,
+    whenLong: whenLong, organizer: organizer, priceLabel: priceLabel, endTime: endTime, el: el, safeUrl: safeUrl, avatar: avatar,
     verifiedBadge: verifiedBadge, tile: tile, ymd: ymd
   };
 })();

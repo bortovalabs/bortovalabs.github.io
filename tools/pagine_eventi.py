@@ -71,7 +71,8 @@ def pagina(modello, eid, f):
     titolo = testo(f, 'title') or 'Evento'
     s, e = data(f, 'start'), data(f, 'end')
     luogo = ', '.join(x for x in (testo(f, 'place'), testo(f, 'town')) if x)
-    gruppo = testo(f, 'groupName')
+    # Eventi della redazione (senza gruppo): chi organizza è scritto a mano
+    gruppo = testo(f, 'groupName') if testo(f, 'groupId') else (testo(f, 'organizerText') or testo(f, 'groupName'))
     annullato = (f.get('cancelled') or {}).get('booleanValue', False)
     righe = [x for x in (('ANNULLATO · ' if annullato else '') + (quando(s, e) if s else ''), luogo, gruppo) if x]
     descrizione = ' · '.join(righe)
