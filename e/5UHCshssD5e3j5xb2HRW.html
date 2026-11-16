@@ -80,11 +80,20 @@
       pic = el('div', 'bigtile'); pic.appendChild(CSB.tile(e));
     }
     var group = null;
-    if (e.groupName) {
+    var who = CSB.organizer(e);
+    if (who) {
       group = el('p', 'group');
       if (e.groupId && /^[A-Za-z0-9_-]{1,64}$/.test(e.groupId)) {
-        var ga = el('a', '', 'Organizza: ' + e.groupName); ga.href = '/g/?id=' + encodeURIComponent(e.groupId); group.appendChild(ga);
-      } else group.textContent = 'Organizza: ' + e.groupName;
+        var ga = el('a', '', 'Organizza: ' + who); ga.href = '/g/?id=' + encodeURIComponent(e.groupId); group.appendChild(ga);
+      } else group.textContent = 'Organizza: ' + who;
+    }
+    // Eventi della redazione: da dove arrivano
+    var source = null, sourceUrl = CSB.safeUrl(e.sourceUrl);
+    if (sourceUrl) {
+      source = el('p', 'meta');
+      var sa = el('a', '', 'Fonte: ' + sourceUrl.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]);
+      sa.href = sourceUrl; sa.rel = 'noopener nofollow'; sa.target = '_blank';
+      source.appendChild(sa);
     }
     var facts = el('ul', 'facts');
     function fact(t) { if (t) facts.appendChild(el('li', '', t)); }
@@ -101,7 +110,8 @@
       el('h1', '', title),
       group,
       facts,
-      e.description ? el('p', 'desc', e.description) : null
+      e.description ? el('p', 'desc', e.description) : null,
+      source
     ]);
     // Foto intera (negli elenchi c'è solo la miniatura)
     CSB.getDoc('events/' + encodeURIComponent(id) + '/media/full').then(function (m) {
