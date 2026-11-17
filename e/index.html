@@ -103,6 +103,8 @@
     var facts = el('ul', 'facts');
     function fact(t) { if (t) facts.appendChild(el('li', '', t)); }
     if (start) fact('📅 ' + CSB.whenLong(e));
+    // Orari giorno per giorno (eventi su più giorni)
+    CSB.dayHours(e).forEach(function (t) { fact('🕒 ' + t); });
     fact([e.place, e.town].filter(Boolean).length ? '📍 ' + [e.place, e.town].filter(Boolean).join(', ') : '');
     var price = CSB.priceLabel(e.price);
     if (price) fact('💶 ' + price + (e.signupUrl ? '' : (price === 'Gratis' ? ' · ingresso libero' : '')));

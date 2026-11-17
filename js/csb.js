@@ -51,7 +51,7 @@
   function select(names) { return { fields: names.map(function (n) { return { fieldPath: n }; }) }; }
 
   var EVENT_FIELDS = ['title', 'category', 'type', 'start', 'end', 'durationMinutes', 'place', 'town', 'price',
-    'groupId', 'groupName', 'organizerText', 'cancelled', 'hidden', 'signupUrl', 'maxParticipants', 'description'];
+    'groupId', 'groupName', 'organizerText', 'days', 'cancelled', 'hidden', 'signupUrl', 'maxParticipants', 'description'];
 
   function eventsWhere(field, op, value) {
     return query({
@@ -151,7 +151,30 @@
     if (e.end instanceof Date) return e.end;
     return new Date(e.start.getTime() + (e.durationMinutes || 60) * 60000);
   }
-  function listDay(e) { var t = ymd(new Date()), d = ymd(e.start); return d < t ? t : d; }
+  /// Orari per giorno (eventi su più giorni): solo i giorni aperti, in ordine. [] = non indicati.
+  function openDays(e) {
+    if (!multiDay(e) || !Array.isArray(e.days)) return [];
+    return e.days.filter(function (d) { return d && typeof d.d === 'string' && !d.closed; })
+      .sort(function (a, b) { return a.d < b.d ? -1 : 1; });
+  }
+  /// Il giorno aperto di oggi o il prossimo.
+  function nextOpenDay(e) {
+    var t = ymd(new Date());
+    return openDays(e).filter(function (d) { return d.d >= t; })[0] || null;
+  }
+  function hoursLabel(d) {
+    if (d.closed) return 'Chiuso';
+    if (d.from && d.to) return d.from + '–' + d.to;
+    if (d.from) return 'dalle ' + d.from;
+    if (d.to) return 'fino alle ' + d.to;
+    return 'orario non indicato';
+  }
+  var WD = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  function dayName(s) { var p = s.split('-').map(Number); return WD[weekday(s)] + ' ' + p[2]; }
+  function listDay(e) {
+    var t = ymd(new Date()), n = nextOpenDay(e), d = n ? n.d : ymd(e.start);
+    return d < t ? t : d;
+  }
   function time(d) { return d.toLocaleTimeString('it-IT', { hour: 'numeric', minute: '2-digit', timeZone: TZ }); }
   function dayLong(s) {
     var p = s.split('-').map(Number);
@@ -172,6 +195,9 @@
     if (multiDay(e)) {
       var a = dayShort(e.start), b = dayShort(e.end);
       var same = a.split(' ')[1] === b.split(' ')[1];
+      var n = nextOpenDay(e);
+      if (n) return (same ? a.split(' ')[0] : a) + '–' + b + ' · ' +
+        (n.d === ymd(new Date()) ? 'oggi' : WD[weekday(n.d)].toLowerCase()) + ' ' + hoursLabel(n);
       return (same ? a.split(' ')[0] : a) + '–' + b + ' · dalle ' + time(e.start);
     }
     if (endTime(e) > new Date() && e.start <= new Date()) return 'In corso · fino alle ' + time(endTime(e));
@@ -180,7 +206,7 @@
   function whenLong(e) {
     var s = dayLong(ymd(e.start));
     var txt;
-    if (multiDay(e)) txt = 'dal ' + dayShort(e.start) + ' al ' + dayShort(e.end) + ', dalle ' + time(e.start);
+    if (multiDay(e)) txt = 'dal ' + dayShort(e.start) + ' al ' + dayShort(e.end) + (openDays(e).length ? '' : ', dalle ' + time(e.start));
     else txt = s + ' · ore ' + time(e.start) + (e.end instanceof Date ? '–' + time(e.end) : '');
     return txt.charAt(0).toUpperCase() + txt.slice(1);
   }
@@ -194,6 +220,8 @@
   // ---------- Filtri (come nell'app) ----------
   function plain(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' '); }
   function covers(e, from, to) { // giorni [from, to) in formato yyyy-mm-dd
+    var od = openDays(e);
+    if (od.length) return od.some(function (d) { return d.d >= from && d.d < to; });
     return ymd(e.start) < to && ymd(endTime(e)) >= from;
   }
   function filter(list, f) {
@@ -319,7 +347,10 @@
   window.CSB = {
     STORE: STORE, upcomingEvents: upcomingEvents, groupEvents: groupEvents, groups: groups, getDoc: getDoc,
     cat: cat, CATS: CATS, emoji: emoji, filter: filter, renderEvents: renderEvents, eventCard: eventCard,
-    whenLong: whenLong, organizer: organizer, priceLabel: priceLabel, endTime: endTime, el: el, safeUrl: safeUrl, avatar: avatar,
+    whenLong: whenLong, organizer: organizer, dayHours: function (e) {
+      return (multiDay(e) && Array.isArray(e.days) ? e.days : []).filter(function (d) { return d && typeof d.d === 'string'; })
+        .sort(function (a, b) { return a.d < b.d ? -1 : 1; }).map(function (d) { return dayName(d.d) + ': ' + hoursLabel(d); });
+    }, priceLabel: priceLabel, endTime: endTime, el: el, safeUrl: safeUrl, avatar: avatar,
     verifiedBadge: verifiedBadge, tile: tile, ymd: ymd
   };
 })();
