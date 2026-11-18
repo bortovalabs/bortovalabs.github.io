@@ -170,6 +170,8 @@
     return 'orario non indicato';
   }
   var WD = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+  var MS = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+  function monthShort(s) { return MS[Number(s.slice(5, 7)) - 1]; }
   function dayName(s) { var p = s.split('-').map(Number); return WD[weekday(s)] + ' ' + p[2]; }
   function listDay(e) {
     var t = ymd(new Date()), n = nextOpenDay(e), d = n ? n.d : ymd(e.start);
@@ -348,8 +350,22 @@
     STORE: STORE, upcomingEvents: upcomingEvents, groupEvents: groupEvents, groups: groups, getDoc: getDoc,
     cat: cat, CATS: CATS, emoji: emoji, filter: filter, renderEvents: renderEvents, eventCard: eventCard,
     whenLong: whenLong, organizer: organizer, dayHours: function (e) {
-      return (multiDay(e) && Array.isArray(e.days) ? e.days : []).filter(function (d) { return d && typeof d.d === 'string'; })
-        .sort(function (a, b) { return a.d < b.d ? -1 : 1; }).map(function (d) { return dayName(d.d) + ': ' + hoursLabel(d); });
+      var days = (multiDay(e) && Array.isArray(e.days) ? e.days : []).filter(function (d) { return d && typeof d.d === 'string'; })
+        .sort(function (a, b) { return a.d < b.d ? -1 : 1; });
+      // Giorni consecutivi con lo stesso orario su una riga
+      var groups = [];
+      days.forEach(function (d) {
+        var g = groups[groups.length - 1], last = g && g[g.length - 1];
+        if (last && addDays(last.d, 1) === d.d && !!last.closed === !!d.closed &&
+            (d.closed || (last.from === d.from && last.to === d.to))) g.push(d); else groups.push([d]);
+      });
+      return groups.map(function (g) {
+        var a = g[0].d, b = g[g.length - 1].d, ma = a.slice(5, 7), mb = b.slice(5, 7);
+        var label = groups.length === 1 && !g[0].closed ? 'Tutti i giorni' :
+          (g.length === 1 ? dayName(a) + ' ' + monthShort(a) :
+            dayName(a) + (ma === mb ? '' : ' ' + monthShort(a)) + ' – ' + dayName(b) + ' ' + monthShort(b));
+        return label + ': ' + hoursLabel(g[0]);
+      });
     }, priceLabel: priceLabel, endTime: endTime, el: el, safeUrl: safeUrl, avatar: avatar,
     verifiedBadge: verifiedBadge, tile: tile, ymd: ymd
   };
