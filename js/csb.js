@@ -205,12 +205,18 @@
     if (endTime(e) > new Date() && e.start <= new Date()) return 'In corso · fino alle ' + time(endTime(e));
     return 'ore ' + time(e.start) + (e.end instanceof Date ? '–' + time(e.end) : '');
   }
+  var ML = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+  /// "Sab 21 novembre · 17:00", "Oggi · 17:00–19:00", "Dal 21 al 29 novembre · dalle 10:00"
   function whenLong(e) {
-    var s = dayLong(ymd(e.start));
-    var txt;
-    if (multiDay(e)) txt = 'dal ' + dayShort(e.start) + ' al ' + dayShort(e.end) + (openDays(e).length ? '' : ', dalle ' + time(e.start));
-    else txt = s + ' · ore ' + time(e.start) + (e.end instanceof Date ? '–' + time(e.end) : '');
-    return txt.charAt(0).toUpperCase() + txt.slice(1);
+    var a = ymd(e.start), t = ymd(new Date());
+    var pa = a.split('-').map(Number);
+    if (multiDay(e)) {
+      var b = ymd(e.end), pb = b.split('-').map(Number);
+      var range = 'Dal ' + pa[2] + (pa[1] === pb[1] ? '' : ' ' + ML[pa[1] - 1]) + ' al ' + pb[2] + ' ' + ML[pb[1] - 1];
+      return range + (openDays(e).length ? '' : ' · dalle ' + time(e.start));
+    }
+    var day = a === t ? 'Oggi' : a === addDays(t, 1) ? 'Domani' : dayName(a) + ' ' + ML[pa[1] - 1];
+    return day + ' · ' + time(e.start) + (e.end instanceof Date && e.end > e.start ? '–' + time(e.end) : '');
   }
   function priceLabel(p) {
     if (typeof p !== 'number' || p < 0) return '';
