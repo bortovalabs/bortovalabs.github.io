@@ -102,7 +102,8 @@
     CSB.dayHours(e).forEach(function (t) { fact('🕒 ' + t); });
     fact([e.place, e.town].filter(Boolean).length ? '📍 ' + [e.place, e.town].filter(Boolean).join(', ') : '');
     var price = CSB.priceLabel(e.price);
-    if (price) fact('💶 ' + price + (e.signupUrl ? '' : (price === 'Gratis' ? ' · ingresso libero' : '')));
+    if (price) fact('💶 ' + (price === 'Gratis' ? (e.category === 'sport' ? 'Partecipazione gratuita' : 'Ingresso gratuito')
+      : (e.category === 'sport' ? 'Quota ' : (e.signupUrl ? 'Biglietto ' : 'Ingresso ')) + price));
     if (e.maxParticipants > 0) fact('👥 ' + (e.maxParticipants === 1 ? '1 posto' : e.maxParticipants + ' posti'));
     if (e.category === 'sport' && e.level && e.level !== 'Tutti i livelli') fact('🎯 Livello: ' + e.level);
     show([
