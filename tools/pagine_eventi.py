@@ -59,6 +59,57 @@ def data(f, k):
     return datetime.fromisoformat(v.replace('Z', '+00:00')).astimezone(TZ)
 
 
+def numero(f, k):
+    v = f.get(k) or {}
+    if 'integerValue' in v:
+        return float(v['integerValue'])
+    if 'doubleValue' in v:
+        return float(v['doubleValue'])
+    return None
+
+
+def dati_strutturati(eid, f, titolo, s, e, foto, gruppo, annullato):
+    """Scheda schema.org/Event per Google (risultati "Eventi" nella ricerca)."""
+    if not s:
+        return ''
+    luogo = testo(f, 'place') or testo(f, 'town') or 'Provincia di Belluno'
+    posto = {'@type': 'Place', 'name': luogo,
+             'address': {'@type': 'PostalAddress', 'addressLocality': testo(f, 'town') or 'Belluno',
+                         'addressRegion': 'BL', 'addressCountry': 'IT'}}
+    lat, lng = numero(f, 'lat'), numero(f, 'lng')
+    if lat is not None and lng is not None:
+        posto['geo'] = {'@type': 'GeoCoordinates', 'latitude': lat, 'longitude': lng}
+    fine = e or s + timedelta(minutes=int(numero(f, 'durationMinutes') or 0) or 180)
+    ev = {
+        '@context': 'https://schema.org',
+        '@type': 'Event',
+        'name': titolo,
+        'startDate': s.isoformat(),
+        'endDate': fine.isoformat(),
+        'eventStatus': 'https://schema.org/EventCancelled' if annullato else 'https://schema.org/EventScheduled',
+        'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
+        'location': posto,
+        'image': [foto],
+        'url': f'{SITO}/e/{eid}',
+    }
+    descrizione = testo(f, 'description').strip()
+    if descrizione:
+        ev['description'] = descrizione[:500]
+    if gruppo:
+        org = {'@type': 'Organization', 'name': gruppo}
+        if re.fullmatch(r'[A-Za-z0-9_-]{1,64}', testo(f, 'groupId')):
+            org['url'] = f'{SITO}/g/{testo(f, "groupId")}'
+        ev['organizer'] = org
+    prezzo = numero(f, 'price')
+    if prezzo is not None and prezzo >= 0:
+        ev['isAccessibleForFree'] = prezzo == 0
+        ev['offers'] = {'@type': 'Offer', 'price': f'{prezzo:.2f}', 'priceCurrency': 'EUR',
+                        'availability': 'https://schema.org/InStock',
+                        'url': testo(f, 'signupUrl') if testo(f, 'signupUrl').startswith('https://') else f'{SITO}/e/{eid}'}
+    testo_json = json.dumps(ev, ensure_ascii=False).replace('<', '\\u003c')
+    return f'<script type="application/ld+json">{testo_json}</script>'
+
+
 def quando(s, e):
     giorno = lambda d: f'{GIORNI[d.weekday()]} {d.day} {MESI[d.month - 1]}'
     t = f'{giorno(s)} · {s:%H:%M}'
@@ -89,8 +140,9 @@ def pagina(modello, eid, f):
         '<span class="badge">Annullato</span>' if annullato else '',
         f'<h1>{esc(titolo)}</h1>',
         f'<p class="group">{esc(gruppo)}</p>' if gruppo else '',
-        f'<p class="meta">📅 {esc(quando(s, e))}</p>' if s else '',
-        f'<p class="meta">📍 {esc(luogo)}</p>' if luogo else '',
+        f'<p class="meta">{esc(quando(s, e))}</p>' if s else '',
+        f'<p class="meta">{esc(luogo)}</p>' if luogo else '',
+        f'<p class="desc">{esc(testo(f, "description")[:1500])}</p>' if testo(f, 'description') else '',
     ])
     p = modello
     p = p.replace('<title>Evento · Vivi Belluno</title>', f'<title>{esc(titolo)} · Vivi Belluno</title>')
@@ -98,7 +150,23 @@ def pagina(modello, eid, f):
     p = p.replace('content="Sport, sagre, musica e cultura in provincia di Belluno."', f'content="{esc(descrizione)}"')
     p = p.replace('content="https://bortovalabs.github.io/og.png"', f'content="{foto}"')
     p = re.sub(r'<!--EVENTO-->.*<!--/EVENTO-->', lambda _: f'<div id="ev">{corpo}</div>', p, flags=re.S)
+    # Per Google: indirizzo principale della pagina e scheda dell'evento
+    testa = f'<link rel="canonical" href="{SITO}/e/{eid}">' + dati_strutturati(eid, f, titolo, s, e, foto, gruppo, annullato)
+    p = p.replace('</head>', testa + '</head>', 1)
     return p
+
+
+def mappa_del_sito(eventi_in_arrivo):
+    """sitemap.xml: le pagine fisse e gli eventi non ancora finiti (per Google)."""
+    righe = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for indirizzo in ['/', '/gruppi/', '/privacy.html', '/termini.html']:
+        righe.append(f'<url><loc>{SITO}{indirizzo}</loc></url>')
+    for eid in sorted(eventi_in_arrivo):
+        righe.append(f'<url><loc>{SITO}/e/{eid}</loc></url>')
+    righe.append('</urlset>')
+    with open(os.path.join(CARTELLA, '..', 'sitemap.xml'), 'w', encoding='utf-8') as out:
+        out.write('\n'.join(righe) + '\n')
 
 
 def main():
@@ -108,6 +176,7 @@ def main():
     with open(os.path.join(CARTELLA, 'index.html'), encoding='utf-8') as f:
         modello = f.read()
     tenuti = set()
+    in_arrivo = set()
     for eid, campi in eventi.items():
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', eid) or (campi.get('hidden') or {}).get('booleanValue'):
             continue
@@ -117,6 +186,10 @@ def main():
         with open(os.path.join(CARTELLA, eid + '.html'), 'w', encoding='utf-8') as out:
             out.write(pagina(modello, eid, campi))
         tenuti.add(eid)
+        fine = data(campi, 'end') or (s + timedelta(hours=3) if s else None)
+        if fine and fine > adesso and not (campi.get('cancelled') or {}).get('booleanValue'):
+            in_arrivo.add(eid)
+    mappa_del_sito(in_arrivo)
     # Via le pagine (e le foto) degli eventi passati o eliminati
     for nome in os.listdir(CARTELLA):
         if nome.endswith('.html') and nome != 'index.html' and nome[:-5] not in tenuti:
