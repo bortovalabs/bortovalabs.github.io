@@ -1,16 +1,16 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Associazioni e gruppi · Vivi Belluno</title>
+<title>Organizzatori · Vivi Belluno</title>
 <meta name="description" content="Associazioni, Pro Loco, società sportive e gruppi della provincia di Belluno che pubblicano i loro eventi su Vivi Belluno.">
-<meta property="og:title" content="Associazioni e gruppi · Vivi Belluno">
+<meta property="og:title" content="Organizzatori · Vivi Belluno">
 <meta property="og:description" content="Associazioni, Pro Loco e gruppi della provincia di Belluno.">
-<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"></head><body><div class="wrap wide">
+<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"><script>(function(){var u=navigator.userAgent,c=document.documentElement.classList;if(/iPhone|iPad|iPod/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1))c.add("ios");else if(/Android/i.test(u))c.add("android")})()</script></head><body><div class="wrap wide">
 <div class="top">
   <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>VIVI <span>BELLUNO</span></b></header></a>
-  <nav><a href="/">Eventi</a><a class="on" href="/gruppi/">Associazioni</a><a class="app" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">App Android</a></nav>
+  <nav><a class="home" href="/">Eventi</a><a class="on" href="/gruppi/">Organizzatori</a><a class="enter" href="/app/">Entra</a></nav>
 </div>
 
-<h1>Associazioni e gruppi</h1>
-<p class="meta">Chi organizza gli eventi in provincia. Hai un gruppo o un'associazione? Proponilo dall'app: dopo l'approvazione pubblichi i tuoi eventi in pochi secondi.</p>
+<h1>Organizzatori</h1>
+<p class="meta">Associazioni, Pro Loco, società sportive e gruppi che organizzano gli eventi in provincia. Organizzi anche tu? <a href="/app/">Entra e proponi la tua pagina</a>: dopo la verifica pubblichi i tuoi eventi in pochi secondi.</p>
 
 <div class="tools" style="margin-top:16px">
   <input class="search" id="q" type="search" placeholder="Cerca per nome, tipo o comune" aria-label="Cerca per nome, tipo o comune">
@@ -19,7 +19,7 @@
 <p class="count" id="count"></p>
 <div class="grid" id="list" style="margin-top:12px"><p class="loading">Carico i gruppi…</p></div>
 
-<footer class="foot small"><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a><br>Contatti: <a href="mailto:vivibelluno@consigliogiovanilebl.org">vivibelluno@consigliogiovanilebl.org</a></footer>
+<footer class="foot small"><p class="no-ios" style="margin:0 0 10px">Hai un telefono Android? <a href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Scarica l'app da Google Play</a></p><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a><br>Contatti: <a href="mailto:vivibelluno@consigliogiovanilebl.org">vivibelluno@consigliogiovanilebl.org</a></footer>
 </div>
 <script src="/js/csb.js"></script>
 <script>
@@ -41,9 +41,9 @@
       var text = plain([g.name, g.type, g.town, CSB.cat(g.category).name].join(' '));
       return words.every(function (w) { return text.indexOf(w) >= 0; });
     });
-    document.getElementById('count').textContent = shown.length === 1 ? '1 gruppo' : shown.length + ' gruppi';
+    document.getElementById('count').textContent = shown.length === 1 ? '1 organizzatore' : shown.length + ' organizzatori';
     list.innerHTML = '';
-    if (!shown.length) { list.appendChild(el('p', 'empty', 'Nessun gruppo trovato.')); return; }
+    if (!shown.length) { list.appendChild(el('p', 'empty', 'Nessun organizzatore trovato.')); return; }
     shown.forEach(function (g) {
       var a = el('a', 'grp');
       a.href = '/g/?id=' + encodeURIComponent(g.id);

@@ -1,52 +1,56 @@
 <!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vivi Belluno · eventi in provincia di Belluno</title>
-<meta name="description" content="Sport, sagre, musica e cultura in provincia di Belluno: tutti gli eventi di associazioni, Pro Loco e gruppi del territorio, in un posto solo.">
+<meta name="description" content="Sport, sagre, musica e cultura in provincia di Belluno: tutti gli eventi di associazioni, Pro Loco e organizzatori del territorio, in un posto solo.">
 <meta property="og:title" content="Vivi Belluno">
 <meta property="og:description" content="Sport, sagre, musica e cultura in provincia di Belluno, in un posto solo.">
-<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"></head><body><div class="wrap mid">
+<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"><script>(function(){var u=navigator.userAgent,c=document.documentElement.classList;if(/iPhone|iPad|iPod/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1))c.add("ios");else if(/Android/i.test(u))c.add("android")})()</script></head><body><div class="wrap mid">
 <div class="top">
   <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>VIVI <span>BELLUNO</span></b></header></a>
-  <nav><a class="on" href="/">Eventi</a><a href="/gruppi/">Associazioni</a><a class="app" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">App Android</a></nav>
+  <nav><a class="on home" href="/">Eventi</a><a href="/gruppi/">Organizzatori</a><a class="enter" href="/app/">Entra</a></nav>
 </div>
 
-<section class="hero">
+<section class="intro">
   <h1>Cosa succede in provincia di Belluno</h1>
-  <p>Sport, sagre, musica e cultura: gli eventi di associazioni, Pro Loco e gruppi del territorio, in un posto solo.</p>
-  <p class="note">Da qui puoi guardare tutto, anche da PC, tablet e iPhone. Per salvare gli eventi e seguire i gruppi c'è <a href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">l'app per Android</a>.</p>
+  <p>Sport, sagre, musica e cultura, tutto in un posto.</p>
 </section>
 
 <div class="tools">
-  <input class="search" id="q" type="search" placeholder="Cerca eventi, gruppi o comuni" aria-label="Cerca eventi, gruppi o comuni">
+  <input class="search" id="q" type="search" placeholder="Cerca eventi, organizzatori o comuni" aria-label="Cerca eventi, organizzatori o comuni">
 </div>
-<div class="tools chips" role="group" aria-label="Filtri">
+<div class="tools chips scroller" role="group" aria-label="Filtri">
   <button class="chip on" data-time="">Tutti</button>
   <button class="chip" data-time="today">Oggi</button>
   <button class="chip" data-time="weekend">Weekend</button>
   <button class="chip" data-time="week">7 giorni</button>
   <button class="chip" id="free" aria-pressed="false">€ Gratis</button>
-  <select class="chip" id="cat" aria-label="Sezione"><option value="">Tutte le sezioni</option></select>
-  <select class="chip" id="town" aria-label="Comune"><option value="">Tutti i comuni</option></select>
+  <button class="chip" id="family" aria-pressed="false">Famiglie</button>
+</div>
+<div class="pair">
+  <select class="chip" id="cat" aria-label="Cosa"><option value="">Tutte le sezioni</option></select>
+  <select class="chip" id="town" aria-label="Dove"><option value="">Ovunque</option></select>
 </div>
 <p class="count" id="count"></p>
 <div id="list"><p class="loading">Carico gli eventi…</p></div>
 
-<footer class="foot small"><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a> · <a href="/elimina-account.html">Cancellazione account</a><br>Contatti: <a href="mailto:vivibelluno@consigliogiovanilebl.org">vivibelluno@consigliogiovanilebl.org</a> · Nicola Bortoluzzi (Bortova Labs)</footer>
+<footer class="foot small"><p class="no-ios" style="margin:0 0 10px">Hai un telefono Android? <a href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Scarica l'app da Google Play</a></p><a href="/privacy.html">Informativa privacy</a> · <a href="/termini.html">Termini d'uso</a> · <a href="/elimina-account.html">Cancellazione account</a><br>Contatti: <a href="mailto:vivibelluno@consigliogiovanilebl.org">vivibelluno@consigliogiovanilebl.org</a> · Nicola Bortoluzzi (Bortova Labs)</footer>
 </div>
 <script src="/js/csb.js"></script>
 <script>
 (function () {
   var all = [];
-  var f = { q: '', time: '', free: false, cat: '', town: '' };
+  var f = { q: '', time: '', free: false, family: false, cat: '', town: '' };
   // I filtri restano nell'indirizzo, così una ricerca si può condividere (es. /?time=weekend)
   var params = new URLSearchParams(location.search);
   ['q', 'time', 'cat', 'town'].forEach(function (k) { if (params.get(k)) f[k] = params.get(k); });
   f.free = params.get('free') === '1';
+  f.family = params.get('family') === '1';
 
   var list = document.getElementById('list');
   var q = document.getElementById('q');
   var cat = document.getElementById('cat');
   var town = document.getElementById('town');
   var free = document.getElementById('free');
+  var family = document.getElementById('family');
   var chips = document.querySelectorAll('[data-time]');
   Object.keys(CSB.CATS).forEach(function (id) {
     var o = document.createElement('option'); o.value = id; o.textContent = CSB.CATS[id].name; cat.appendChild(o);
@@ -55,10 +59,13 @@
 
   function sync() {
     cat.value = f.cat; free.classList.toggle('on', f.free); free.setAttribute('aria-pressed', f.free);
+    family.classList.toggle('on', f.family); family.setAttribute('aria-pressed', f.family);
+    cat.classList.toggle('on', !!f.cat); town.classList.toggle('on', !!f.town);
     chips.forEach(function (c) { c.classList.toggle('on', c.dataset.time === f.time); c.setAttribute('aria-pressed', c.dataset.time === f.time); });
     var p = new URLSearchParams();
     ['q', 'time', 'cat', 'town'].forEach(function (k) { if (f[k]) p.set(k, f[k]); });
     if (f.free) p.set('free', '1');
+    if (f.family) p.set('family', '1');
     history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : ''));
   }
   function draw() {
@@ -67,7 +74,7 @@
     var shown = CSB.filter(all, f);
     document.getElementById('count').textContent = all.length
       ? (shown.length === 1 ? '1 evento' : shown.length + ' eventi') : '';
-    var any = f.q || f.time || f.free || f.cat || f.town;
+    var any = f.q || f.time || f.free || f.family || f.cat || f.town;
     CSB.renderEvents(list, shown, any
       ? 'Nessun evento con questi filtri. Prova a toglierne qualcuno.'
       : 'Per ora non ci sono eventi in programma. Torna a trovarci!');
@@ -76,17 +83,34 @@
   q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { f.q = q.value.trim(); draw(); }, 200); });
   chips.forEach(function (c) { c.addEventListener('click', function () { f.time = c.dataset.time; draw(); }); });
   free.addEventListener('click', function () { f.free = !f.free; draw(); });
+  family.addEventListener('click', function () { f.family = !f.family; draw(); });
   cat.addEventListener('change', function () { f.cat = cat.value; draw(); });
   town.addEventListener('change', function () { f.town = town.value; draw(); });
 
   CSB.upcomingEvents().then(function (events) {
     all = events;
-    var towns = {};
-    events.forEach(function (e) { if (e.town) towns[e.town] = true; });
-    Object.keys(towns).sort(function (a, b) { return a.localeCompare(b, 'it'); }).forEach(function (t) {
-      var o = document.createElement('option'); o.value = t; o.textContent = t; town.appendChild(o);
+    // "Dove": le zone della provincia con eventi, e dentro i comuni (come nell'app)
+    var towns = {}, valid = {};
+    events.forEach(function (e) { if (e.town) towns[e.town] = (towns[e.town] || 0) + 1; });
+    function option(parent, value, text) {
+      var o = document.createElement('option'); o.value = value; o.textContent = text; parent.appendChild(o); valid[value] = true;
+    }
+    CSB.ZONES.forEach(function (z) {
+      var here = z.towns.filter(function (t) { return towns[t]; }).sort(function (a, b) { return a.localeCompare(b, 'it'); });
+      if (!here.length) return;
+      var n = here.reduce(function (s, t) { return s + towns[t]; }, 0);
+      var g = document.createElement('optgroup'); g.label = z.name;
+      if (here.length > 1) option(g, 'z:' + z.id, 'Tutto: ' + z.name + ' (' + n + ')');
+      here.forEach(function (t) { option(g, t, t + ' (' + towns[t] + ')'); });
+      town.appendChild(g);
     });
-    if (f.town && !towns[f.town]) f.town = '';
+    var other = Object.keys(towns).filter(function (t) { return !CSB.zoneOfTown(t); });
+    if (other.length) {
+      var g = document.createElement('optgroup'); g.label = 'Altri comuni';
+      other.sort(function (a, b) { return a.localeCompare(b, 'it'); }).forEach(function (t) { option(g, t, t + ' (' + towns[t] + ')'); });
+      town.appendChild(g);
+    }
+    if (f.town && !valid[f.town]) f.town = '';
     town.value = f.town;
     draw();
   }).catch(function () {

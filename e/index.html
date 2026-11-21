@@ -2,11 +2,12 @@
 <title>Evento · Vivi Belluno</title>
 <meta property="og:title" content="Un evento su Vivi Belluno">
 <meta property="og:description" content="Sport, sagre, musica e cultura in provincia di Belluno.">
-<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css">
+<link rel="icon" href="/favicon.png"><meta name="theme-color" content="#12233F"><meta property="og:image" content="https://bortovalabs.github.io/og.png"><link rel="stylesheet" href="/style.css"><script>(function(){var u=navigator.userAgent,c=document.documentElement.classList;if(/iPhone|iPad|iPod/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1))c.add("ios");else if(/Android/i.test(u))c.add("android")})()</script>
 <style>
 .photo{width:100%;max-height:340px;object-fit:cover;border-radius:14px;margin-bottom:14px;display:block}
-.bigtile{height:180px;border-radius:14px;margin-bottom:14px;overflow:hidden}
-.bigtile .tile{font-size:72px}
+.bigtile{height:150px;border-radius:14px;margin-bottom:14px;overflow:hidden}
+.bigtile .tile{font-size:64px}
+@media (max-width:560px){.bigtile{height:96px}.bigtile .tile{font-size:48px}.card{padding:18px}}
 .kind{color:var(--gt);font-weight:700;margin:0 0 2px}
 .group{font-weight:700;margin:2px 0 10px}
 .desc{white-space:pre-line;margin:16px 0 4px}
@@ -14,7 +15,7 @@
 </style></head><body><div class="wrap">
 <div class="top">
   <a class="logo" href="/"><header><img src="/icon.svg" alt=""><b>VIVI <span>BELLUNO</span></b></header></a>
-  <nav><a href="/">Eventi</a><a href="/gruppi/">Associazioni</a></nav>
+  <nav><a class="home" href="/">Eventi</a><a href="/gruppi/">Organizzatori</a><a class="enter" href="/app/">Entra</a></nav>
 </div>
 <div class="card">
 <!--EVENTO-->
@@ -25,7 +26,7 @@
 <!--/EVENTO-->
 <div class="btnrow" id="actions"></div>
 <a class="btn primary" id="open" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Apri nell'app</a>
-<a class="btn ghost" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Non hai l'app? Scaricala per Android</a>
+<a class="btn ghost no-ios" href="https://play.google.com/store/apps/details?id=it.chesuccedebelluno.app">Non hai l'app? Scaricala per Android</a>
 <p class="small" style="margin-top:16px">Su Vivi Belluno trovi gli eventi di sport, sagre, musica e cultura della provincia. <a href="/">Vedi tutti gli eventi</a></p>
 </div></div>
 <script src="/js/csb.js"></script>
@@ -43,8 +44,11 @@
     var target = 'bortovalabs.github.io/e/?id=' + encodeURIComponent(id);
     open.href = 'intent://' + target +
       '#Intent;scheme=https;package=it.chesuccedebelluno.app;S.browser_fallback_url=' + encodeURIComponent(store) + ';end';
+  } else if (id) {
+    // iPhone e PC: l'evento si apre nell'app web, dove si può salvare
+    open.href = '/app/#/e/' + encodeURIComponent(id);
   } else {
-    open.style.display = 'none'; // da PC e iPhone l'app non si apre: basta il pulsante per scaricarla
+    open.style.display = 'none';
   }
   var box = document.getElementById('ev');
   var actions = document.getElementById('actions');
@@ -101,16 +105,21 @@
       source.appendChild(sa);
     }
     var facts = el('ul', 'facts');
-    function fact(t) { if (t) facts.appendChild(el('li', '', t)); }
-    if (start) fact('📅 ' + CSB.whenLong(e));
+    function fact(ic, t) {
+      if (!t) return;
+      var li = el('li'); li.appendChild(CSB.icon(ic)); li.appendChild(el('span', '', t)); facts.appendChild(li);
+    }
+    if (start) fact('date', CSB.whenLong(e));
     // Orari giorno per giorno (eventi su più giorni)
-    CSB.dayHours(e).forEach(function (t) { fact('🕒 ' + t); });
-    fact([e.place, e.town].filter(Boolean).length ? '📍 ' + [e.place, e.town].filter(Boolean).join(', ') : '');
+    CSB.dayHours(e).forEach(function (t) { fact('time', t); });
+    fact('place', [e.place, e.town].filter(Boolean).join(', '));
     var price = CSB.priceLabel(e.price);
-    if (price) fact('💶 ' + (price === 'Gratis' ? (e.category === 'sport' ? 'Partecipazione gratuita' : 'Ingresso gratuito')
+    if (price) fact('price', (price === 'Gratis' ? (e.category === 'sport' ? 'Partecipazione gratuita' : 'Ingresso gratuito')
       : (e.category === 'sport' ? 'Quota ' : (e.signupUrl ? 'Biglietto ' : 'Ingresso ')) + price));
-    if (e.maxParticipants > 0) fact('👥 ' + (e.maxParticipants === 1 ? '1 posto' : e.maxParticipants + ' posti'));
-    if (e.category === 'sport' && e.level && e.level !== 'Tutti i livelli') fact('🎯 Livello: ' + e.level);
+    if (e.family) fact('people', 'Adatto a bambini e famiglie');
+    else if (CSB.ageMin(e)) fact('people', CSB.ageMin(e) === 18 ? 'Solo maggiorenni (18+)' : 'Dai ' + CSB.ageMin(e) + ' anni');
+    if (e.maxParticipants > 0) fact('people', e.maxParticipants === 1 ? '1 posto' : e.maxParticipants + ' posti');
+    if (e.category === 'sport' && e.level && e.level !== 'Tutti i livelli') fact('flag', 'Livello: ' + e.level);
     show([
       pic,
       e.cancelled ? el('span', 'badge', 'Annullato') : null,
@@ -134,6 +143,16 @@
         button('Come arrivare', 'https://www.google.com/maps/dir/?api=1&destination=' + e.lat + ',' + e.lng);
       }
       if (start && CSB.endTime(e) > new Date()) button('Aggiungi al calendario', ics(e), 'ghost', 'evento.ics');
+    }
+    // Condividi (WhatsApp, messaggi…): il menu del telefono, dove c'è
+    if (navigator.share) {
+      var sh = el('a', 'btn ghost', 'Condividi');
+      sh.href = '#';
+      sh.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        navigator.share({ title: title, text: title + ' · ' + CSB.whenLong(e), url: location.origin + '/e/?id=' + encodeURIComponent(id) }).catch(function () {});
+      });
+      actions.appendChild(sh);
     }
   }).catch(function () {
     show([el('h1', '', 'Evento'), el('p', 'meta', 'Non riesco a caricare i dettagli adesso. Riprova tra poco.')]);

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <!-- La build web si pubblica in https://bortovalabs.github.io/app/ (flutter build web --base-href /app/) -->
+  <base href="/app/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Vivi Belluno: entra per proporre il tuo gruppo, pubblicare eventi, salvare quelli che ti interessano e seguire le associazioni della provincia di Belluno.">
+  <meta name="theme-color" content="#12233F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Vivi Belluno">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>Vivi Belluno</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #12233F; }
+    #caricamento { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #c9d3e3; background: #12233F; z-index: 10; }
+    #caricamento img { width: 88px; height: 88px; border-radius: 22px; }
+    #caricamento .barra { width: 140px; height: 4px; border-radius: 4px; background: #24395f; overflow: hidden; }
+    #caricamento .barra::after { content: ""; display: block; width: 40%; height: 100%; background: #FF7A3D; border-radius: 4px;
+      animation: va 1.1s ease-in-out infinite; }
+    @keyframes va { 0% { transform: translateX(-110%); } 100% { transform: translateX(260%); } }
+    @media (prefers-reduced-motion: reduce) { #caricamento .barra::after { animation: none; width: 100%; } }
+  </style>
+</head>
+<body>
+  <div id="caricamento" role="status" aria-live="polite">
+    <img src="icons/Icon-192.png" alt="">
+    <div>Sto aprendo Vivi Belluno…</div>
+    <div class="barra"></div>
+  </div>
+  <noscript><p style="color:#fff;text-align:center;font-family:sans-serif">Per usare l'app serve JavaScript attivo.</p></noscript>
+  <script>
+    // Via la schermata di caricamento appena l'app disegna la prima schermata
+    window.addEventListener('flutter-first-frame', function () {
+      var c = document.getElementById('caricamento');
+      if (c) c.remove();
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

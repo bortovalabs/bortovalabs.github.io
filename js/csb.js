@@ -51,7 +51,8 @@
   function select(names) { return { fields: names.map(function (n) { return { fieldPath: n }; }) }; }
 
   var EVENT_FIELDS = ['title', 'category', 'type', 'start', 'end', 'durationMinutes', 'place', 'town', 'price',
-    'groupId', 'groupName', 'organizerText', 'days', 'cancelled', 'hidden', 'signupUrl', 'maxParticipants', 'description'];
+    'groupId', 'groupName', 'organizerText', 'days', 'cancelled', 'hidden', 'signupUrl', 'maxParticipants', 'description',
+    'family', 'ageMin'];
 
   function eventsWhere(field, op, value) {
     return query({
@@ -138,6 +139,32 @@
   };
   function cat(id) { return CATS[id] || CATS.sport; }
   function emoji(e) { return TYPE_EMOJI[e.type] || cat(e.category).emoji; }
+
+  // ---------- Zone della provincia (come nell'app, lib/util/zones.dart) ----------
+  var ZONES = [
+    ['belluno', 'Belluno e dintorni', ['Belluno', 'Ponte nelle Alpi', 'Limana', 'Longarone', 'Soverzene']],
+    ['alpago', 'Alpago', ['Alpago', "Chies d'Alpago", 'Tambre']],
+    ['valbelluna', 'Valbelluna', ['Borgo Valbelluna', 'Sedico', 'Sospirolo', 'Santa Giustina', 'San Gregorio nelle Alpi', 'Cesiomaggiore']],
+    ['feltrino', 'Feltrino', ['Feltre', 'Pedavena', 'Fonzaso', 'Arsiè', 'Lamon', 'Sovramonte', 'Seren del Grappa', 'Setteville']],
+    ['agordino', 'Agordino', ['Agordo', 'Gosaldo', 'La Valle Agordina', 'Rivamonte Agordino', 'Taibon Agordino', 'Voltago Agordino',
+      'Cencenighe Agordino', 'San Tomaso Agordino', 'Vallada Agordina', "Canale d'Agordo", 'Falcade', 'Alleghe', 'Rocca Pietore',
+      'Colle Santa Lucia', 'Selva di Cadore', 'Livinallongo del Col di Lana']],
+    ['zoldo', 'Val di Zoldo', ['Val di Zoldo', 'Zoppè di Cadore']],
+    ['cadore', 'Cadore', ['Pieve di Cadore', 'Calalzo di Cadore', 'Domegge di Cadore', 'Lozzo di Cadore', 'Lorenzago di Cadore',
+      'Vigo di Cadore', 'Auronzo di Cadore', 'Perarolo di Cadore', 'Valle di Cadore', 'Cibiana di Cadore', 'Ospitale di Cadore',
+      'Borca di Cadore', 'San Vito di Cadore', 'Vodo Cadore']],
+    ['comelico', 'Comelico', ['Comelico Superiore', 'Danta di Cadore', 'San Nicolò di Comelico', 'San Pietro di Cadore', 'Santo Stefano di Cadore']],
+    ['cortina', "Cortina d'Ampezzo", ["Cortina d'Ampezzo"]]
+  ].map(function (z) { return { id: z[0], name: z[1], towns: z[2] }; });
+  function zoneOfTown(t) { return ZONES.filter(function (z) { return z.towns.indexOf(t) >= 0; })[0] || null; }
+  /// Filtro "Dove": '' = tutto, 'z:<zona>' = una zona, altrimenti un comune.
+  function inWhere(e, w) {
+    if (!w) return true;
+    if (w.indexOf('z:') === 0) { var z = zoneOfTown(e.town); return !!z && z.id === w.slice(2); }
+    return e.town === w;
+  }
+  /// Per chi è: "Famiglie", "14+", "16+", "18+" (come nell'app)
+  function ageMin(e) { return [14, 16, 18].indexOf(e.ageMin) >= 0 ? e.ageMin : 0; }
 
   // ---------- Date (sempre ora italiana) ----------
   function ymd(d) { return d.toLocaleDateString('en-CA', { timeZone: TZ }); } // 2026-11-14
@@ -239,8 +266,9 @@
     var words = plain(f.q).split(' ').filter(Boolean);
     return list.filter(function (e) {
       if (f.cat && e.category !== f.cat) return false;
-      if (f.town && e.town !== f.town) return false;
+      if (f.town && !inWhere(e, f.town)) return false;
       if (f.free && e.price !== 0) return false;
+      if (f.family && !e.family) return false;
       if (words.length) {
         var text = plain([e.title, e.place, e.town, e.type, organizer(e), cat(e.category).name, e.description].join(' '));
         if (!words.every(function (w) { return text.indexOf(w) >= 0; })) return false;
@@ -296,6 +324,8 @@
     var tags = el('div', 'tags');
     var pr = priceLabel(e.price);
     if (pr) tags.appendChild(el('span', 'tag' + (pr === 'Gratis' ? ' free' : ''), pr));
+    if (e.family) tags.appendChild(el('span', 'tag fam', 'Famiglie'));
+    else if (ageMin(e) >= 16) tags.appendChild(el('span', 'tag age', ageMin(e) + '+'));
     if (e.signupUrl) tags.appendChild(el('span', 'tag', 'Su iscrizione'));
     tags.appendChild(el('span', 'tag', e.type || cat(e.category).name));
     body.appendChild(tags);
@@ -345,6 +375,25 @@
     }
     return box;
   }
+  // Icone semplici (uguali su ogni telefono, a differenza delle emoji: su iPhone 📅 mostra "17 luglio")
+  var ICONS = {
+    date: 'M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z',
+    time: 'M12 2C6.47 2 2 6.48 2 12s4.47 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z',
+    place: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    price: 'M15 18.5c-2.51 0-4.68-1.42-5.76-3.5H15l1-2H8.58c-.05-.33-.08-.66-.08-1s.03-.67.08-1H15l1-2H9.24C10.32 6.92 12.5 5.5 15 5.5c1.61 0 3.09.59 4.23 1.57L21 5.3C19.41 3.87 17.3 3 15 3c-3.92 0-7.24 2.51-8.48 6H3l-1 2h4.06c-.04.33-.06.66-.06 1s.02.67.06 1H3l-1 2h4.52c1.24 3.49 4.56 6 8.48 6 2.31 0 4.41-.87 6-2.3l-1.78-1.77c-1.13.98-2.6 1.57-4.22 1.57z',
+    people: 'M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
+    flag: 'M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z'
+  };
+  function icon(name) {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', ICONS[name] || ICONS.flag);
+    svg.appendChild(path);
+    return svg;
+  }
   function verifiedBadge() {
     var s = el('span', 'verified', '✓');
     s.title = 'Organizzatore verificato';
@@ -373,6 +422,7 @@
         return label + ': ' + hoursLabel(g[0]);
       });
     }, priceLabel: priceLabel, endTime: endTime, el: el, safeUrl: safeUrl, avatar: avatar,
-    verifiedBadge: verifiedBadge, tile: tile, ymd: ymd
+    verifiedBadge: verifiedBadge, tile: tile, ymd: ymd, ZONES: ZONES, zoneOfTown: zoneOfTown, ageMin: ageMin, icon: icon,
+    ios: document.documentElement.classList.contains('ios')
   };
 })();
