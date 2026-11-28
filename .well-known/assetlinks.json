@@ -1,0 +1,11 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "it.chesuccedebelluno.app",
+    "sha256_cert_fingerprints": [
+      "78:F6:E7:1A:42:37:DB:DD:1A:EE:4C:3C:3E:F7:47:D1:62:15:93:CC:12:F8:C9:54:E2:E7:A6:18:BC:AC:78:ED",
+      "3E:FD:30:94:64:9E:85:D6:66:C1:09:E0:66:B2:F1:41:16:FA:A9:5D:75:BE:59:AA:1C:F5:52:E4:FF:5E:E8:75"
+    ]
+  }
+}]
